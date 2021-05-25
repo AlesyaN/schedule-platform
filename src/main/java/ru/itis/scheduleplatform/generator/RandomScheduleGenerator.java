@@ -1,0 +1,193 @@
+package ru.itis.scheduleplatform.generator;
+
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import ru.itis.scheduleplatform.dto.ScheduleParameters;
+import ru.itis.scheduleplatform.enums.ClassType;
+import ru.itis.scheduleplatform.enums.DayOfWeek;
+import ru.itis.scheduleplatform.models.Class;
+import ru.itis.scheduleplatform.models.*;
+import ru.itis.scheduleplatform.repositories.*;
+
+import java.util.List;
+import java.util.Random;
+
+
+@Slf4j
+@Service
+public class RandomScheduleGenerator {
+
+    private Table<ScheduleCell, Group, Class> schedule;
+
+    private StudyPlanRepository studyPlanRepository;
+    private TimeSlotRepository timeSlotRepository;
+    private GroupRepository groupRepository;
+    private TeacherRepository teacherRepository;
+    private AuditoriumRepository auditoriumRepository;
+
+    private List<ScheduleParameters> scheduleParameters;
+
+    public RandomScheduleGenerator(StudyPlanRepository studyPlanRepository,
+                                   TimeSlotRepository timeSlotRepository,
+                                   GroupRepository groupRepository,
+                                   TeacherRepository teacherRepository,
+                                   AuditoriumRepository auditoriumRepository) {
+        this.studyPlanRepository = studyPlanRepository;
+        this.timeSlotRepository = timeSlotRepository;
+        this.groupRepository = groupRepository;
+        this.teacherRepository = teacherRepository;
+        this.auditoriumRepository = auditoriumRepository;
+    }
+
+    public Table<ScheduleCell, Group, Class> generate(List<ScheduleParameters> scheduleParameters) {
+        this.scheduleParameters = scheduleParameters;
+        log.debug("Generating random schedule sample");
+        schedule = scheduleParameters.get(0).getSchedule();
+        assignGym(1);
+        assignLectures(1);
+        assignSeminars(1);
+        return schedule;
+    }
+
+    private void assignGym(Integer semesterNumber) {
+        log.debug("Assign GYM");
+        List<StudyPlan> gymClasses = studyPlanRepository.findAllBySemesterNumberAndClassType(semesterNumber, ClassType.GYM.toString());
+        for (StudyPlan gym : gymClasses) {
+            List<Group> groups = scheduleParameters.get(0).getGroups();
+            for (int i = 0; i < gym.getCountOfClassesPerWeek(ClassType.GYM); i++) {
+                Teacher teacher = getRandomTeacherForSubjectAndClassType(gym.getSubject(), ClassType.GYM);
+                ScheduleCell randomCell = getEmptyRandomCell(groups, teacher);
+                Auditorium auditorium = getRandomAuditorium(ClassType.GYM, randomCell);
+                for (Group group : groups) {
+                    Class c = Class.builder()
+                            .classType(ClassType.GYM)
+                            .subject(gym.getSubject())
+                            .teacher(teacher)
+                            .auditorium(auditorium)
+                            .build();
+                    schedule.put(randomCell, group, c);
+                }
+            }
+        }
+    }
+
+    private void assignSeminars(Integer semesterNumber) {
+        log.debug("Assigning seminars");
+        List<StudyPlan> seminars = studyPlanRepository.findAllBySemesterNumberAndClassType(semesterNumber, ClassType.SEMINAR.toString());
+        for (StudyPlan seminar : seminars) {
+            List<Group> groups = scheduleParameters.get(0).getGroups();
+            for (Group group : groups) {
+                for (int i = 0; i < seminar.getCountOfClassesPerWeek(ClassType.SEMINAR); i++) {
+                    Teacher teacher = getRandomTeacherForSubjectAndClassType(seminar.getSubject(), ClassType.SEMINAR);
+                    ScheduleCell randomCell = getEmptyRandomCell(group, teacher);
+                    Auditorium auditorium = getRandomAuditorium(ClassType.SEMINAR, randomCell);
+                    Class c = Class.builder()
+                            .classType(ClassType.SEMINAR)
+                            .subject(seminar.getSubject())
+                            .teacher(teacher)
+                            .auditorium(auditorium)
+                            .build();
+                    schedule.put(randomCell, group, c);
+                }
+            }
+        }
+    }
+
+
+    private void assignLectures(Integer semesterNumber) {
+        log.debug("Assigning lectures");
+        List<StudyPlan> lectures = studyPlanRepository.findAllBySemesterNumberAndClassType(semesterNumber, ClassType.LECTURE.toString());
+        for (StudyPlan lecture : lectures) {
+            List<Group> groups = scheduleParameters.get(0).getGroups();
+            for (int i = 0; i < lecture.getCountOfClassesPerWeek(ClassType.LECTURE); i++) {
+                Teacher teacher = getRandomTeacherForSubjectAndClassType(lecture.getSubject(), ClassType.LECTURE);
+                ScheduleCell randomCell = getEmptyRandomCell(groups, teacher);
+                Auditorium auditorium = getRandomAuditorium(ClassType.LECTURE, randomCell);
+                for (Group group : groups) {
+                    Class c = Class.builder()
+                            .classType(ClassType.LECTURE)
+                            .subject(lecture.getSubject())
+                            .teacher(teacher)
+                            .auditorium(auditorium)
+                            .build();
+                    schedule.put(randomCell, group, c);
+                }
+            }
+        }
+    }
+
+    private ScheduleCell getEmptyRandomCell(Group group, Teacher teacher) {
+        Random random = new Random();
+        ScheduleCell scheduleCell;
+        do {
+            DayOfWeek dayOfWeek = DayOfWeek.values()[random.nextInt(DayOfWeek.values().length)];
+            List<TimeSlot> timeSlots = scheduleParameters.get(0).getTimeSlots();
+            TimeSlot timeSlot = timeSlots.get(random.nextInt(timeSlots.size()));
+            scheduleCell = ScheduleCell.builder()
+                    .dayOfWeek(dayOfWeek)
+                    .timeSlot(timeSlot)
+                    .build();
+        } while (schedule.contains(scheduleCell, group) || !teacherIsFree(teacher, scheduleCell));
+        return scheduleCell;
+    }
+
+    private boolean teacherIsFree(Teacher teacher, ScheduleCell scheduleCell) {
+        for (Class c: schedule.row(scheduleCell).values()) {
+            if (c.getTeacher().equals(teacher)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private ScheduleCell getEmptyRandomCell(List<Group> groups, Teacher teacher) {
+        Random random = new Random();
+        ScheduleCell scheduleCell;
+        do {
+            DayOfWeek dayOfWeek = DayOfWeek.values()[random.nextInt(DayOfWeek.values().length)];
+            List<TimeSlot> timeSlots = scheduleParameters.get(0).getTimeSlots();
+            TimeSlot timeSlot = timeSlots.get(random.nextInt(timeSlots.size()));
+            scheduleCell = ScheduleCell.builder()
+                    .dayOfWeek(dayOfWeek)
+                    .timeSlot(timeSlot)
+                    .build();
+        } while (!cellIsEmpty(scheduleCell, groups) || !teacherIsFree(teacher, scheduleCell));
+        return scheduleCell;
+    }
+
+    private boolean cellIsEmpty(ScheduleCell cell, List<Group> groups) {
+        for (Group group : groups) {
+            if (schedule.contains(cell, group))
+                return false;
+        }
+        return true;
+    }
+
+    private Teacher getRandomTeacherForSubjectAndClassType(Subject subject, ClassType classType) {
+        List<Teacher> teachers = teacherRepository.findBySubjectAndClassType(subject.getId(), classType.toString());
+        Random random = new Random();
+        return teachers.get(random.nextInt(teachers.size()));
+    }
+
+    private Auditorium getRandomAuditorium(ClassType classType, ScheduleCell scheduleCell) {
+        List<Auditorium> auditoriums = auditoriumRepository.findAllByAllowedClassTypesIn(List.of(classType));
+        Random random = new Random();
+        Auditorium auditorium;
+         do {
+             auditorium = auditoriums.get(random.nextInt(auditoriums.size()));
+         } while (!auditoriumIsFree(auditorium, scheduleCell));
+         return auditorium;
+    }
+
+    private boolean auditoriumIsFree(Auditorium auditorium, ScheduleCell scheduleCell) {
+        for (Class c: schedule.row(scheduleCell).values()) {
+            if (c.getAuditorium().equals(auditorium)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+}
