@@ -18,5 +18,5 @@ public class ScheduleParameters {
     private List<Group> groups;
     private List<TimeSlot> timeSlots;
     private Table<ScheduleCell, Group, Class> schedule;
-
+    private Integer maxGroupCountInParallel;
 }

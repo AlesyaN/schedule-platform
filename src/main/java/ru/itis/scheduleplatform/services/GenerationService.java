@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import ru.itis.scheduleplatform.dto.GeneratorParameters;
 import ru.itis.scheduleplatform.dto.ScheduleParameters;
 import ru.itis.scheduleplatform.dto.ScheduleResponse;
+import ru.itis.scheduleplatform.io.XlsxWriter;
+import ru.itis.scheduleplatform.models.genetic.Schedule;
 import ru.itis.scheduleplatform.repositories.GroupRepository;
 import ru.itis.scheduleplatform.repositories.TimeSlotRepository;
 import ru.itis.scheduleplatform.services.handlers.Handler;
@@ -17,24 +19,23 @@ import java.util.List;
 public class GenerationService {
 
     private Handler shiftsHandler;
-    private Handler freeDayHandler;
-    private Handler algorithmHandler;
     private GroupRepository groupRepository;
     private TimeSlotRepository timeSlotRepository;
+    private XlsxWriter xlsxWriter;
+
 
     public GenerationService(@Qualifier("shiftsHandler") Handler shiftsHandler,
                              @Qualifier("freeDayHandler") Handler freeDayHandler,
                              @Qualifier("algorithmHandler") Handler algorithmHandler,
                              GroupRepository groupRepository,
-                             TimeSlotRepository timeSlotRepository) {
+                             TimeSlotRepository timeSlotRepository, XlsxWriter xlsxWriter) {
         this.groupRepository = groupRepository;
         this.timeSlotRepository = timeSlotRepository;
+        this.xlsxWriter = xlsxWriter;
         shiftsHandler.setNext(freeDayHandler);
         freeDayHandler.setNext(algorithmHandler);
 
         this.shiftsHandler = shiftsHandler;
-        this.freeDayHandler = freeDayHandler;
-        this.algorithmHandler = algorithmHandler;
     }
 
     public ScheduleResponse process(GeneratorParameters parameters) {
@@ -45,9 +46,9 @@ public class GenerationService {
                 .build();
         List<ScheduleParameters> scheduleParametersList = new ArrayList<>(List.of(scheduleParameters));
 
-//        return ScheduleResponse.fromSchedule(shiftsHandler.handleRequest(parameters, scheduleParametersList));
-        shiftsHandler.handleRequest(parameters, scheduleParametersList);
-        return null;
+        Schedule schedule = shiftsHandler.handleRequest(parameters, scheduleParametersList);
+        xlsxWriter.exportScheduleToFile(schedule.getSchedule(), "src/main/resources/timetable.xlsx");
+        return ScheduleResponse.fromSchedule(schedule);
     }
 
 }

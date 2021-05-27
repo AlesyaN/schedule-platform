@@ -30,4 +30,9 @@ public class Auditorium {
     @Enumerated(EnumType.STRING)
     private List<ClassType> allowedClassTypes;
 
+
+    @Override
+    public String toString() {
+        return roomNumber;
+    }
 }

@@ -33,10 +33,10 @@ public class Class implements Comparable<Class> {
 
     @Override
     public String toString() {
-        return "Class{" +
-                "subject=" + subject.getName() +
-                ", classType=" + classType +
-                '}';
+        return this.subject + "\n" +
+                this.classType + "\n" +
+                this.teacher + "\n" +
+                this.auditorium;
     }
 
     @Override

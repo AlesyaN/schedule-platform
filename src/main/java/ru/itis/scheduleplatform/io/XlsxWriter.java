@@ -141,10 +141,7 @@ public class XlsxWriter {
                 Row row = xlsxSheet.getRow(rowNum);
                 Class c = schedule.get(scheduleCell, group);
                 Cell cell = row.createCell(colNum);
-                cell.setCellValue(c.getSubject().getName() + "\n"
-                        + c.getClassType().toString() + "\n"
-                        + c.getTeacher().getSurname() + "\n"
-                        + c.getAuditorium().getRoomNumber());
+                cell.setCellValue(c.toString());
                 CellStyle cs = xlsxSheet.getWorkbook().createCellStyle();
                 cs.setWrapText(true);
                 cell.setCellStyle(cs);

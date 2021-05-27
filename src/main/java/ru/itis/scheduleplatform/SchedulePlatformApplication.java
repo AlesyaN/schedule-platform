@@ -17,14 +17,7 @@ import ru.itis.scheduleplatform.models.genetic.Schedule;
 public class SchedulePlatformApplication {
 
     public static void main(String[] args) {
-        ApplicationContext context = SpringApplication.run(SchedulePlatformApplication.class, args);
-//        RandomScheduleGenerator generator = context.getBean(RandomScheduleGenerator.class);
-//        XlsxWriter writer = context.getBean(XlsxWriter.class);
-//        GeneticGenerator genetic = context.getBean(GeneticGenerator.class);
-//        SimulatedAnnealingGenerator simulatedAnnealingGenerator = context.getBean(SimulatedAnnealingGenerator.class);
-//
-//        Table<ScheduleCell, Group, Class> schedule = simulatedAnnealingGenerator.generate("name").getSchedule();
-//        writer.exportScheduleToFile(schedule, "src/main/resources/timetable.xlsx");
+        SpringApplication.run(SchedulePlatformApplication.class, args);
     }
 
 }

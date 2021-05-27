@@ -10,9 +10,9 @@ public class GeneratorParameters {
 
     private FixAuditoriumFor fixAuditoriumFor;
 
-    private boolean isFreeDayRequired;
+    private Boolean isFreeDayRequired;
 
-    private boolean divideOnShifts;
+    private Boolean divideOnShifts;
 
     private int semesterNumber;
 

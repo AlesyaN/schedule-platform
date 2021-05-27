@@ -18,14 +18,14 @@ import java.util.Random;
 public class FeeDayHandler extends Handler {
 
     @Override
-    public void handleRequest(GeneratorParameters generatorParameters, List<ScheduleParameters> scheduleParametersList) {
-        log.debug("Free day handler processing");
-        if (generatorParameters.isFreeDayRequired()) {
+    public Schedule handleRequest(GeneratorParameters generatorParameters, List<ScheduleParameters> scheduleParametersList) {
+        if (generatorParameters.getIsFreeDayRequired()) {
+            log.debug("Free day handler processing");
             Random random = new Random();
             Class freeClass = Class.builder().classType(ClassType.SEMINAR).subject(new Subject("Библиотечный день")).build();
             for (ScheduleParameters scheduleParameters : scheduleParametersList) {
+                DayOfWeek freeDay = DayOfWeek.values()[random.nextInt(DayOfWeek.values().length)];
                 for (Group group : scheduleParameters.getGroups()) {
-                    DayOfWeek freeDay = DayOfWeek.values()[random.nextInt(DayOfWeek.values().length)];
                     for (TimeSlot timeSlot : scheduleParameters.getTimeSlots()) {
                         scheduleParameters.getSchedule().put(ScheduleCell.builder().dayOfWeek(freeDay).timeSlot(timeSlot).build(),
                                 group, freeClass);
@@ -33,6 +33,6 @@ public class FeeDayHandler extends Handler {
                 }
             }
         }
-        next.handleRequest(generatorParameters, scheduleParametersList);
+        return next.handleRequest(generatorParameters, scheduleParametersList);
     }
 }

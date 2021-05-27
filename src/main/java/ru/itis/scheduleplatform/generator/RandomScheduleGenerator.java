@@ -44,7 +44,7 @@ public class RandomScheduleGenerator {
     public Table<ScheduleCell, Group, Class> generate(List<ScheduleParameters> scheduleParameters) {
         this.scheduleParameters = scheduleParameters;
         log.debug("Generating random schedule sample");
-        schedule = scheduleParameters.get(0).getSchedule();
+        schedule = HashBasedTable.create(scheduleParameters.get(0).getSchedule());
         assignGym(1);
         assignLectures(1);
         assignSeminars(1);

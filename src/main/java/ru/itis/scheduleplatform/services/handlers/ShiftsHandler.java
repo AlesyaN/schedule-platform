@@ -27,9 +27,9 @@ public class ShiftsHandler extends Handler {
     }
 
     @Override
-    public void handleRequest(GeneratorParameters generatorParameters, List<ScheduleParameters> scheduleParameters) {
+    public Schedule handleRequest(GeneratorParameters generatorParameters, List<ScheduleParameters> scheduleParameters) {
         log.debug("Shifts handler processing");
-        if (generatorParameters.isDivideOnShifts()) {
+        if (generatorParameters.getDivideOnShifts()) {
             List<Group> allGroups = groupRepository.findAllBySemesterNumber(generatorParameters.getSemesterNumber())
                     .stream().sorted().collect(Collectors.toList());
             List<Group> firstShiftGroups = allGroups.subList(0, allGroups.size() / 2);
@@ -49,6 +49,6 @@ public class ShiftsHandler extends Handler {
 
             scheduleParameters.add(sp);
         }
-        next.handleRequest(generatorParameters, scheduleParameters);
+        return next.handleRequest(generatorParameters, scheduleParameters);
     }
 }

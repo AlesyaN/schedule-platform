@@ -34,10 +34,12 @@ public class SimulatedAnnealingGenerator implements Generator {
 
     @Override
     public Schedule generate(List<ScheduleParameters> scheduleParameters) {
+        log.debug("Generation using simulated annealing algorithm");
         Schedule currentSchedule = new Schedule(randomScheduleGenerator.generate(scheduleParameters));
         int currentFitness = currentSchedule.getFitness();
         double temperature = T_MAX;
         for (int i = 0; i < 1000; i++) {
+            log.debug("Generating candidate number " + i);
             val scheduleCandidate = generateScheduleCandidate(currentSchedule);
             val candidateFitness = scheduleCandidate.getFitness();
             if (candidateFitness > currentFitness) {

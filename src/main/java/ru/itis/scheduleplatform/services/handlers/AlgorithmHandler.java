@@ -23,12 +23,12 @@ public class AlgorithmHandler extends Handler {
     }
 
     @Override
-    public void handleRequest(GeneratorParameters generatorParameters, List<ScheduleParameters> scheduleParameters) {
+    public Schedule handleRequest(GeneratorParameters generatorParameters, List<ScheduleParameters> scheduleParameters) {
         log.debug("Algorithm handler processing");
         if (generatorParameters.getAlgorithmType().equals(GeneratorParameters.AlgorithmType.GENETIC)) {
-            geneticGenerator.generate(scheduleParameters);
+            return geneticGenerator.generate(scheduleParameters);
         } else if (generatorParameters.getAlgorithmType().equals(GeneratorParameters.AlgorithmType.ANNEALING)) {
-            simulatedAnnealingGenerator.generate(scheduleParameters);
+            return simulatedAnnealingGenerator.generate(scheduleParameters);
         } else {
             throw new IllegalArgumentException("Algorithm type is not supported");
         }

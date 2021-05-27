@@ -37,11 +37,6 @@ public class Teacher {
 
     @Override
     public String toString() {
-        return "Teacher{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", surname='" + surname + '\'' +
-                ", patronymic='" + patronymic + '\'' +
-                '}';
+        return surname;
     }
 }
