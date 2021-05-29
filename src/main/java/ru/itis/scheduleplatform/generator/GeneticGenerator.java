@@ -7,13 +7,11 @@ import org.springframework.stereotype.Service;
 import ru.itis.scheduleplatform.dto.ScheduleParameters;
 import ru.itis.scheduleplatform.enums.ClassType;
 import ru.itis.scheduleplatform.enums.DayOfWeek;
-import ru.itis.scheduleplatform.models.*;
 import ru.itis.scheduleplatform.models.Class;
+import ru.itis.scheduleplatform.models.*;
 import ru.itis.scheduleplatform.models.genetic.Schedule;
 import ru.itis.scheduleplatform.repositories.AuditoriumRepository;
-import ru.itis.scheduleplatform.repositories.GroupRepository;
 import ru.itis.scheduleplatform.repositories.StudyPlanRepository;
-import ru.itis.scheduleplatform.repositories.TimeSlotRepository;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,27 +28,21 @@ public class GeneticGenerator implements Generator {
     private static final int MAX_SEMESTER_NUM = 2;
 
     private RandomScheduleGenerator randomScheduleGenerator;
-    private GroupRepository groupRepository;
-    private TimeSlotRepository timeSlotRepository;
     private AuditoriumRepository auditoriumRepository;
-    private StudyPlanRepository studyPlanRepository;
+    private ScheduleParameters scheduleParameters;
 
     public GeneticGenerator(RandomScheduleGenerator randomScheduleGenerator,
-                            GroupRepository groupRepository,
-                            TimeSlotRepository timeSlotRepository,
-                            AuditoriumRepository auditoriumRepository,
-                            StudyPlanRepository studyPlanRepository) {
+                            AuditoriumRepository auditoriumRepository) {
         this.randomScheduleGenerator = randomScheduleGenerator;
-        this.groupRepository = groupRepository;
-        this.timeSlotRepository = timeSlotRepository;
-        this.studyPlanRepository = studyPlanRepository;
         this.auditoriumRepository = auditoriumRepository;
     }
 
-    public Schedule generate(List<ScheduleParameters> scheduleParameters) {
+    public Table<ScheduleCell, Group, Class> generate(ScheduleParameters scheduleParameters) {
+        this.scheduleParameters = scheduleParameters;
         List<Schedule> population = new ArrayList<>();
         for (int i = 0; i < POPULATION_COUNT; i++) {
-            population.add(new Schedule(randomScheduleGenerator.generate(scheduleParameters)));
+            Table<ScheduleCell, Group, Class> scheduleTable = randomScheduleGenerator.generate(scheduleParameters);
+            population.add(new Schedule(scheduleTable));
         }
         calculatePopulationFitness(population);
 
@@ -74,7 +66,7 @@ public class GeneticGenerator implements Generator {
         }
 
         bestSchedule.setName("name");
-        return bestSchedule;
+        return bestSchedule.getSchedule();
     }
 
     private double calculatePopulationFitness(List<Schedule> population) {
@@ -137,7 +129,7 @@ public class GeneticGenerator implements Generator {
     private void crossGym(Table<ScheduleCell, Group, Class> childSchedule, Schedule parent1, Schedule parent2) {
         log.debug("Crossing gym");
         for (int j = 1; j < MAX_SEMESTER_NUM; j += 2) {
-            List<Group> groups = groupRepository.findAllBySemesterNumber(j);
+            List<Group> groups = scheduleParameters.getGroups();
             List<Class> gymClasses = getRandomParentSchedule(parent1, parent2).getSchedule().column(groups.get(0)).values()
                     .stream().filter(c -> c.getClassType().equals(ClassType.GYM)).distinct().collect(Collectors.toList());
             int locus;
@@ -164,12 +156,12 @@ public class GeneticGenerator implements Generator {
     private void crossSeminars(Table<ScheduleCell, Group, Class> childSchedule, Schedule parent1, Schedule parent2) {
         log.debug("Crossing seminars");
         for (int j = 1; j < MAX_SEMESTER_NUM; j += 2) {
-            List<Group> groups = groupRepository.findAllBySemesterNumber(j);
+            List<Group> groups = scheduleParameters.getGroups();
             Random random = new Random();
             int locus = random.nextInt((int) parent1.getSchedule().column(groups.get(0)).values()
                     .stream().filter(c -> c.getClassType().equals(ClassType.SEMINAR)).count() - 1);
 
-            for (Group group: groups) {
+            for (Group group : groups) {
                 List<Class> seminars1 = parent1.getSchedule().column(group).values()
                         .stream().filter(c -> c.getClassType().equals(ClassType.SEMINAR)).sorted().collect(Collectors.toList());
                 List<Class> seminars2 = parent2.getSchedule().column(group).values()
@@ -179,10 +171,10 @@ public class GeneticGenerator implements Generator {
                     List<ScheduleCell> cells;
                     if (i < locus) {
                         seminar = seminars1.get(i);
-                        cells = getCellsByGroupAndClass(parent1.getSchedule() ,group, seminar);
+                        cells = getCellsByGroupAndClass(parent1.getSchedule(), group, seminar);
                     } else {
                         seminar = seminars2.get(i);
-                        cells = getCellsByGroupAndClass(parent2.getSchedule() ,group, seminar);
+                        cells = getCellsByGroupAndClass(parent2.getSchedule(), group, seminar);
                     }
 
                     Teacher teacher = seminars1.stream()
@@ -192,11 +184,11 @@ public class GeneticGenerator implements Generator {
                             .orElseThrow(IllegalArgumentException::new);
                     seminar.setTeacher(teacher);
 
-                    for (ScheduleCell cell: cells) {
+                    for (ScheduleCell cell : cells) {
                         if (!childSchedule.contains(cell, group)
                                 && teacherIsAvailable(childSchedule, cell, teacher)) {
                             if (!auditoriumIsAvailable(childSchedule, cell, seminar.getAuditorium())) {
-                                seminar.setAuditorium(getRandomAuditorium(childSchedule, cell, ClassType.SEMINAR));
+                                seminar.setAuditorium(getRandomAuditorium(childSchedule, cell, group));
                             }
                             childSchedule.put(cell, group, seminar);
                         } else {
@@ -210,18 +202,24 @@ public class GeneticGenerator implements Generator {
         }
     }
 
-    private Auditorium getRandomAuditorium(Table<ScheduleCell, Group, Class> childSchedule, ScheduleCell cell, ClassType classType) {
-        List<Auditorium> auditoriums = auditoriumRepository.findAllByAllowedClassTypesIn(List.of(classType));
+    private Auditorium getRandomAuditorium(Table<ScheduleCell, Group, Class> childSchedule, ScheduleCell cell, Group group) {
+        List<Auditorium> auditoriums = auditoriumRepository.findAllByAllowedClassTypesIn(List.of(ClassType.SEMINAR));
         Random random = new Random();
         Auditorium auditorium;
-        do {
-            auditorium = auditoriums.get(random.nextInt(auditoriums.size()));
-        } while (!auditoriumIsAvailable(childSchedule, cell, auditorium));
+        if (scheduleParameters.getGroupAuditoriumMap() != null
+                && !scheduleParameters.getGroupAuditoriumMap().isEmpty()
+                && auditoriumIsAvailable(childSchedule, cell, scheduleParameters.getGroupAuditoriumMap().get(group))) {
+            auditorium = scheduleParameters.getGroupAuditoriumMap().get(group);
+        } else {
+            do {
+                auditorium = auditoriums.get(random.nextInt(auditoriums.size()));
+            } while (!auditoriumIsAvailable(childSchedule, cell, auditorium));
+        }
         return auditorium;
     }
 
     private boolean auditoriumIsAvailable(Table<ScheduleCell, Group, Class> childSchedule, ScheduleCell cell, Auditorium auditorium) {
-        for (Class c: childSchedule.row(cell).values()) {
+        for (Class c : childSchedule.row(cell).values()) {
             if (c.getAuditorium().equals(auditorium)) {
                 return false;
             }
@@ -230,7 +228,7 @@ public class GeneticGenerator implements Generator {
     }
 
     private boolean teacherIsAvailable(Table<ScheduleCell, Group, Class> childSchedule, ScheduleCell cell, Teacher teacher) {
-        for (Class c: childSchedule.row(cell).values()) {
+        for (Class c : childSchedule.row(cell).values()) {
             if (c.getTeacher().equals(teacher)) {
                 return false;
             }
@@ -242,7 +240,7 @@ public class GeneticGenerator implements Generator {
     private void crossLectures(Table<ScheduleCell, Group, Class> childSchedule, Schedule parent1, Schedule parent2) {
         log.debug("Crossing lectures");
         for (int j = 1; j < MAX_SEMESTER_NUM; j += 2) {
-            List<Group> groups = groupRepository.findAllBySemesterNumber(j);
+            List<Group> groups = scheduleParameters.getGroups();
             List<Class> lectures = getRandomParentSchedule(parent1, parent2).getSchedule().column(groups.get(0)).values().stream().filter(c -> c.getClassType().equals(ClassType.LECTURE)).distinct().collect(Collectors.toList());
             Random random = new Random();
             int locus = random.nextInt(lectures.size() - 1);
@@ -294,7 +292,7 @@ public class GeneticGenerator implements Generator {
     private Schedule mutation(Schedule schedule) {
         Random random = new Random();
         for (int j = 1; j < MAX_SEMESTER_NUM; j += 2) {
-            List<Group> groups = groupRepository.findAllBySemesterNumber(j);
+            List<Group> groups = scheduleParameters.getGroups();
             for (Group group : groups) {
                 Map<ScheduleCell, Class> scheduleForGroup = schedule.getSchedule().column(group);
                 log.debug("Mutation for group " + group.getNumber() + " started. Count of classes: " + scheduleForGroup.values().size());
@@ -334,8 +332,8 @@ public class GeneticGenerator implements Generator {
         Random random = new Random();
         ScheduleCell emptyCell;
         do {
-            DayOfWeek dayOfWeek = DayOfWeek.values()[random.nextInt(DayOfWeek.values().length)];
-            List<TimeSlot> timeSlots = timeSlotRepository.findAll();
+            DayOfWeek dayOfWeek = getRandomDayOfWeek(ClassType.SEMINAR);
+            List<TimeSlot> timeSlots = scheduleParameters.getTimeSlots();
             TimeSlot timeSlot = timeSlots.get(random.nextInt(timeSlots.size()));
             emptyCell = ScheduleCell.builder()
                     .dayOfWeek(dayOfWeek)
@@ -347,10 +345,10 @@ public class GeneticGenerator implements Generator {
 
     private ScheduleCell getEmptyRandomRow(Table<ScheduleCell, Group, Class> childSchedule, List<Group> groups) {
         Random random = new Random();
-        List<TimeSlot> timeSlots = timeSlotRepository.findAll();
+        List<TimeSlot> timeSlots = scheduleParameters.getTimeSlots();
         ScheduleCell emptyCell;
         do {
-            DayOfWeek dayOfWeek = DayOfWeek.values()[random.nextInt(DayOfWeek.values().length)];
+            DayOfWeek dayOfWeek = getRandomDayOfWeek(ClassType.LECTURE);
             TimeSlot timeSlot = timeSlots.get(random.nextInt(timeSlots.size()));
             emptyCell = ScheduleCell.builder()
                     .dayOfWeek(dayOfWeek)
@@ -358,6 +356,23 @@ public class GeneticGenerator implements Generator {
                     .build();
         } while (!rowIsEmpty(childSchedule, emptyCell, groups));
         return emptyCell;
+    }
+
+
+    private DayOfWeek getRandomDayOfWeek(ClassType classType) {
+        Random random = new Random();
+        if (scheduleParameters.getLectureDays() == null || scheduleParameters.getLectureDays().isEmpty()) {
+            return DayOfWeek.values()[random.nextInt(DayOfWeek.values().length)];
+        } else if (classType.equals(ClassType.LECTURE) || classType.equals(ClassType.GYM)) {
+            return scheduleParameters.getLectureDays().get(random.nextInt(scheduleParameters.getLectureDays().size()));
+        } else {
+            List<DayOfWeek> seminarDays = Arrays.stream(DayOfWeek.values().clone())
+                    .filter(day -> !scheduleParameters.getLectureDays().contains(day))
+                    .collect(Collectors.toList());
+            return seminarDays.get(random.nextInt(seminarDays.size()));
+        }
+
+
     }
 
     private boolean rowIsEmpty(Table<ScheduleCell, Group, Class> childSchedule, ScheduleCell cell, List<Group> groups) {

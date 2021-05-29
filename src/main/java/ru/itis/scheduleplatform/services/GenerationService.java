@@ -27,13 +27,17 @@ public class GenerationService {
     public GenerationService(@Qualifier("shiftsHandler") Handler shiftsHandler,
                              @Qualifier("freeDayHandler") Handler freeDayHandler,
                              @Qualifier("algorithmHandler") Handler algorithmHandler,
+                             @Qualifier("divideByClassTypeHandler") Handler divideByClassTypeHandler,
+                             @Qualifier("fixAuditoriumHandler") Handler fixAuditoriumHandler,
                              GroupRepository groupRepository,
                              TimeSlotRepository timeSlotRepository, XlsxWriter xlsxWriter) {
         this.groupRepository = groupRepository;
         this.timeSlotRepository = timeSlotRepository;
         this.xlsxWriter = xlsxWriter;
         shiftsHandler.setNext(freeDayHandler);
-        freeDayHandler.setNext(algorithmHandler);
+        freeDayHandler.setNext(divideByClassTypeHandler);
+        divideByClassTypeHandler.setNext(fixAuditoriumHandler);
+        fixAuditoriumHandler.setNext(algorithmHandler);
 
         this.shiftsHandler = shiftsHandler;
     }

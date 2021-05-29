@@ -4,12 +4,12 @@ import com.google.common.collect.Table;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import ru.itis.scheduleplatform.enums.DayOfWeek;
+import ru.itis.scheduleplatform.models.*;
 import ru.itis.scheduleplatform.models.Class;
-import ru.itis.scheduleplatform.models.Group;
-import ru.itis.scheduleplatform.models.ScheduleCell;
-import ru.itis.scheduleplatform.models.TimeSlot;
 
 import java.util.List;
+import java.util.Map;
 
 @Setter
 @Getter
@@ -19,4 +19,6 @@ public class ScheduleParameters {
     private List<TimeSlot> timeSlots;
     private Table<ScheduleCell, Group, Class> schedule;
     private Integer maxGroupCountInParallel;
+    private List<DayOfWeek> lectureDays;
+    private Map<Group, Auditorium> groupAuditoriumMap;
 }

@@ -1,12 +1,13 @@
 package ru.itis.scheduleplatform.dto;
 
 import lombok.Data;
+import ru.itis.scheduleplatform.enums.DayOfWeek;
 
 @Data
 public class GeneratorParameters {
     private String name;
 
-    private boolean divideOnLectureAndPracticeDays;
+    private Integer numberOfLectureDays;
 
     private FixAuditoriumFor fixAuditoriumFor;
 
@@ -32,7 +33,7 @@ public class GeneratorParameters {
     @Override
     public String toString() {
         return "{ name='" + name + '\'' +
-                ", divideOnLectureAndPracticeDays=" + divideOnLectureAndPracticeDays +
+                ", numberOfLectureDays=" + numberOfLectureDays +
                 ", fixAuditoriumFor=" + fixAuditoriumFor +
                 ", isFreeDayRequired=" + isFreeDayRequired +
                 ", divideOnShifts=" + divideOnShifts +

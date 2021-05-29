@@ -2,6 +2,7 @@ package ru.itis.scheduleplatform.services.handlers;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.itis.scheduleplatform.constants.Const;
 import ru.itis.scheduleplatform.dto.GeneratorParameters;
 import ru.itis.scheduleplatform.dto.ScheduleParameters;
 import ru.itis.scheduleplatform.enums.ClassType;
@@ -22,7 +23,7 @@ public class FeeDayHandler extends Handler {
         if (generatorParameters.getIsFreeDayRequired()) {
             log.debug("Free day handler processing");
             Random random = new Random();
-            Class freeClass = Class.builder().classType(ClassType.SEMINAR).subject(new Subject("Библиотечный день")).build();
+            Class freeClass = Class.builder().classType(ClassType.SEMINAR).subject(new Subject(Const.FREE_DAY_SUBJECT_NAME)).build();
             for (ScheduleParameters scheduleParameters : scheduleParametersList) {
                 DayOfWeek freeDay = DayOfWeek.values()[random.nextInt(DayOfWeek.values().length)];
                 for (Group group : scheduleParameters.getGroups()) {

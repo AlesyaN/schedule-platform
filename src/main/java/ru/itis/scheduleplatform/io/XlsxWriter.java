@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -98,7 +99,7 @@ public class XlsxWriter {
     }
 
     private void templateGroups() {
-        List<Group> groups = groupRepository.findAll();
+        List<Group> groups = groupRepository.findAll().stream().sorted().collect(Collectors.toList());
         Row row = xlsxSheet.createRow(TOP_OFFSET);
         for (int i = 0; i < groups.size(); i++) {
             Cell cell = row.createCell(i + 2);
