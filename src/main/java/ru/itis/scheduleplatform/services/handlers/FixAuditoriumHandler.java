@@ -25,23 +25,23 @@ public class FixAuditoriumHandler extends Handler {
     }
 
     @Override
-    public Schedule handleRequest(GeneratorParameters generatorParameters, List<ScheduleParameters> scheduleParameters) {
+    public List<Schedule> handleRequest(GeneratorParameters generatorParameters, List<ScheduleParameters> scheduleParameters) {
         Random random = new Random();
         List<Auditorium> auditoriums = auditoriumRepository.findAllByAllowedClassTypesIn(List.of(ClassType.SEMINAR));
-        switch (generatorParameters.getFixAuditoriumFor()) {
-            case GROUP:
-                for (ScheduleParameters sp : scheduleParameters) {
-                    sp.setGroupAuditoriumMap(new HashMap<>());
-                    for (Group group : sp.getGroups()) {
-                        Auditorium auditorium;
-                        do {
-                            auditorium = auditoriums.get(random.nextInt(auditoriums.size()));
-                        } while (sp.getGroupAuditoriumMap().containsValue(auditorium));
-                        sp.getGroupAuditoriumMap().put(group, auditorium);
-                    }
+
+        if (generatorParameters.getFixAuditoriumFor() != null
+                && generatorParameters.getFixAuditoriumFor() == GeneratorParameters.FixAuditoriumFor.GROUP) {
+            for (ScheduleParameters sp : scheduleParameters) {
+                sp.setGroupAuditoriumMap(new HashMap<>());
+                for (Group group : sp.getGroups()) {
+                    Auditorium auditorium;
+                    do {
+                        auditorium = auditoriums.get(random.nextInt(auditoriums.size()));
+                    } while (sp.getGroupAuditoriumMap().containsValue(auditorium));
+                    sp.getGroupAuditoriumMap().put(group, auditorium);
                 }
-            default:
-                return next.handleRequest(generatorParameters, scheduleParameters);
+            }
         }
+        return next.handleRequest(generatorParameters, scheduleParameters);
     }
 }

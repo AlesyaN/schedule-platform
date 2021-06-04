@@ -15,7 +15,7 @@ import java.util.Random;
 @Service("divideByClassTypeHandler")
 public class DivideByClassTypeHandler extends Handler {
     @Override
-    public Schedule handleRequest(GeneratorParameters generatorParameters, List<ScheduleParameters> scheduleParameters) {
+    public List<Schedule> handleRequest(GeneratorParameters generatorParameters, List<ScheduleParameters> scheduleParameters) {
         if (generatorParameters.getNumberOfLectureDays() != null) {
             Random random = new Random();
             for (ScheduleParameters sp : scheduleParameters) {

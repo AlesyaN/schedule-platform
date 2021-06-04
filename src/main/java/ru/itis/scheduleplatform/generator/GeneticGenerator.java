@@ -5,13 +5,14 @@ import com.google.common.collect.Table;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.itis.scheduleplatform.dto.ScheduleParameters;
+import ru.itis.scheduleplatform.dto.ScheduleResponse;
 import ru.itis.scheduleplatform.enums.ClassType;
 import ru.itis.scheduleplatform.enums.DayOfWeek;
 import ru.itis.scheduleplatform.models.Class;
 import ru.itis.scheduleplatform.models.*;
 import ru.itis.scheduleplatform.models.genetic.Schedule;
 import ru.itis.scheduleplatform.repositories.AuditoriumRepository;
-import ru.itis.scheduleplatform.repositories.StudyPlanRepository;
+import ru.itis.scheduleplatform.repositories.ScheduleMongoRepository;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,43 +31,67 @@ public class GeneticGenerator implements Generator {
     private RandomScheduleGenerator randomScheduleGenerator;
     private AuditoriumRepository auditoriumRepository;
     private ScheduleParameters scheduleParameters;
+    private ScheduleMongoRepository scheduleMongoRepository;
 
     public GeneticGenerator(RandomScheduleGenerator randomScheduleGenerator,
-                            AuditoriumRepository auditoriumRepository) {
+                            AuditoriumRepository auditoriumRepository,
+                            ScheduleMongoRepository scheduleMongoRepository) {
         this.randomScheduleGenerator = randomScheduleGenerator;
         this.auditoriumRepository = auditoriumRepository;
+        this.scheduleMongoRepository = scheduleMongoRepository;
     }
 
-    public Table<ScheduleCell, Group, Class> generate(ScheduleParameters scheduleParameters) {
+    public Schedule initGeneration(ScheduleParameters scheduleParameters) {
         this.scheduleParameters = scheduleParameters;
         List<Schedule> population = new ArrayList<>();
+        UUID populationId = UUID.randomUUID();
         for (int i = 0; i < POPULATION_COUNT; i++) {
             Table<ScheduleCell, Group, Class> scheduleTable = randomScheduleGenerator.generate(scheduleParameters);
-            population.add(new Schedule(scheduleTable));
+            Schedule s = new Schedule(scheduleTable, populationId, scheduleParameters);
+            scheduleMongoRepository.save(ScheduleResponse.fromSchedule(s));
+            population.add(s);
+        }
+
+        return getBestSchedule(population);
+    }
+
+    public Schedule processNextIteration(UUID populationId) {
+        List<ScheduleResponse> scheduleResponseList = scheduleMongoRepository.findAllByPopulationId(populationId);
+        List<Schedule> population = Schedule.convert(scheduleResponseList);
+        this.scheduleParameters = population.get(0).getScheduleParameters();
+        population = createNewPopulation(population);
+        population.forEach(s -> scheduleMongoRepository.save(ScheduleResponse.fromSchedule(s)));
+
+        return getBestSchedule(population);
+    }
+
+    public Schedule generate(ScheduleParameters scheduleParameters) {
+        this.scheduleParameters = scheduleParameters;
+        List<Schedule> population = new ArrayList<>();
+        UUID populationId = UUID.randomUUID();
+        for (int i = 0; i < POPULATION_COUNT; i++) {
+            Table<ScheduleCell, Group, Class> scheduleTable = randomScheduleGenerator.generate(scheduleParameters);
+            population.add(new Schedule(scheduleTable, populationId));
         }
         calculatePopulationFitness(population);
 
-        int populationNum = 1;
-        Schedule bestSchedule = null;
-//        while (calculatePopulationFitness(population) < MAX_FITNESS) {
-        while (populationNum < 5) {
-            log.info("Creating population number " + populationNum);
-            population = createNewPopulation(population);
-            calculatePopulationFitness(population);
-            bestSchedule = population.stream().max((scheduleSample1, scheduleSample2) -> {
-                if (scheduleSample1.getFitness() > scheduleSample2.getFitness())
-                    return 1;
-                else if (scheduleSample1.getFitness() < scheduleSample2.getFitness())
-                    return -1;
-                return 0;
-            }).orElseThrow(IllegalArgumentException::new);
 
-            log.info("Best schedule fitness(" + populationNum + "): " + bestSchedule.getFitness());
-            populationNum++;
+        for (int i = 0; i < 100; i++) {
+            population = createNewPopulation(population);
         }
 
-        bestSchedule.setName("name");
-        return bestSchedule.getSchedule();
+        return getBestSchedule(population);
+    }
+
+    private Schedule getBestSchedule(List<Schedule> population) {
+
+        return population.stream().max((scheduleSample1, scheduleSample2) -> {
+            if (scheduleSample1.getFitness() > scheduleSample2.getFitness())
+                return 1;
+            else if (scheduleSample1.getFitness() < scheduleSample2.getFitness())
+                return -1;
+            return 0;
+        }).orElseThrow(IllegalArgumentException::new);
     }
 
     private double calculatePopulationFitness(List<Schedule> population) {
@@ -77,6 +102,7 @@ public class GeneticGenerator implements Generator {
 
     private List<Schedule> createNewPopulation(List<Schedule> population) {
         List<Schedule> newPopulation = new ArrayList<>();
+        UUID populationId = UUID.randomUUID();
         while (newPopulation.size() < POPULATION_COUNT) {
             Schedule[] parents = selectParentTournament(population);
 
@@ -88,6 +114,12 @@ public class GeneticGenerator implements Generator {
 
             mutation(child1);
             mutation(child2);
+
+            child1.setPopulationId(populationId);
+            child2.setPopulationId(populationId);
+
+            child1.setScheduleParameters(scheduleParameters);
+            child2.setScheduleParameters(scheduleParameters);
 
             newPopulation.add(child1);
             newPopulation.add(child2);

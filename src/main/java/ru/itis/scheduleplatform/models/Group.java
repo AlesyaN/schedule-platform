@@ -1,6 +1,7 @@
 package ru.itis.scheduleplatform.models;
 
 import lombok.Data;
+import org.springframework.data.annotation.Transient;
 
 import javax.persistence.*;
 import java.util.Objects;
@@ -15,10 +16,13 @@ public class Group implements Comparable<Group> {
     private Long id;
 
     private String number;
+
+    @Transient
     private Integer count;
 
     @ManyToOne
     @JoinColumn(name = "grade_id")
+    @Transient
     private Grade grade;
 
     @Override

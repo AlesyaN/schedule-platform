@@ -1,7 +1,6 @@
 package ru.itis.scheduleplatform.dto;
 
 import lombok.Data;
-import ru.itis.scheduleplatform.enums.DayOfWeek;
 
 @Data
 public class GeneratorParameters {

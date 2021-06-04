@@ -31,7 +31,7 @@ public class SimulatedAnnealingGenerator implements Generator {
     }
 
     @Override
-    public Table<ScheduleCell, Group, Class> generate(ScheduleParameters scheduleParameters) {
+    public Schedule generate(ScheduleParameters scheduleParameters) {
         this.scheduleParameters = scheduleParameters;
         log.debug("Generation using simulated annealing algorithm");
         Table<ScheduleCell, Group, Class> scheduleTable = randomScheduleGenerator.generate(scheduleParameters);
@@ -55,7 +55,7 @@ public class SimulatedAnnealingGenerator implements Generator {
             temperature = decreaseTemperature(i);
         }
 
-        return currentSchedule.getSchedule();
+        return currentSchedule;
     }
 
     private double decreaseTemperature(int i) {

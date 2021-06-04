@@ -27,7 +27,7 @@ public class ShiftsHandler extends Handler {
     }
 
     @Override
-    public Schedule handleRequest(GeneratorParameters generatorParameters, List<ScheduleParameters> scheduleParameters) {
+    public List<Schedule> handleRequest(GeneratorParameters generatorParameters, List<ScheduleParameters> scheduleParameters) {
         log.debug("Shifts handler processing");
         if (generatorParameters.getDivideOnShifts()) {
             List<Group> allGroups = groupRepository.findAllBySemesterNumber(generatorParameters.getSemesterNumber())
@@ -45,7 +45,7 @@ public class ShiftsHandler extends Handler {
             ScheduleParameters sp = ScheduleParameters.builder()
                     .groups(secondShiftGroups)
                     .timeSlots(secondShiftTimeSlots)
-                    .schedule(HashBasedTable.create()).build();
+                    .scheduleTable(HashBasedTable.create()).build();
 
             scheduleParameters.add(sp);
         }

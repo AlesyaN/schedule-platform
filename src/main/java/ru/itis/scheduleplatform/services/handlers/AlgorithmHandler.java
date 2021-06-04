@@ -1,7 +1,5 @@
 package ru.itis.scheduleplatform.services.handlers;
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.itis.scheduleplatform.dto.GeneratorParameters;
@@ -9,11 +7,9 @@ import ru.itis.scheduleplatform.dto.ScheduleParameters;
 import ru.itis.scheduleplatform.generator.Generator;
 import ru.itis.scheduleplatform.generator.GeneticGenerator;
 import ru.itis.scheduleplatform.generator.SimulatedAnnealingGenerator;
-import ru.itis.scheduleplatform.models.Class;
-import ru.itis.scheduleplatform.models.Group;
-import ru.itis.scheduleplatform.models.ScheduleCell;
 import ru.itis.scheduleplatform.models.genetic.Schedule;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -29,7 +25,7 @@ public class AlgorithmHandler extends Handler {
     }
 
     @Override
-    public Schedule handleRequest(GeneratorParameters generatorParameters, List<ScheduleParameters> scheduleParameters) {
+    public List<Schedule> handleRequest(GeneratorParameters generatorParameters, List<ScheduleParameters> scheduleParameters) {
         Generator generator;
         if (generatorParameters.getAlgorithmType().equals(GeneratorParameters.AlgorithmType.GENETIC)) {
             generator = geneticGenerator;
@@ -40,10 +36,10 @@ public class AlgorithmHandler extends Handler {
         }
 
         log.debug("Algorithm handler processing");
-        Table<ScheduleCell, Group, Class> scheduleTable = HashBasedTable.create();
+        List<Schedule> schedules = new ArrayList<>();
         for (ScheduleParameters sp : scheduleParameters) {
-            scheduleTable.putAll(generator.generate(sp));
+            schedules.add(generator.generate(sp));
         }
-        return new Schedule(scheduleTable);
+        return schedules;
     }
 }

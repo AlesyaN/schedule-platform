@@ -19,7 +19,7 @@ import java.util.Random;
 public class FeeDayHandler extends Handler {
 
     @Override
-    public Schedule handleRequest(GeneratorParameters generatorParameters, List<ScheduleParameters> scheduleParametersList) {
+    public List<Schedule> handleRequest(GeneratorParameters generatorParameters, List<ScheduleParameters> scheduleParametersList) {
         if (generatorParameters.getIsFreeDayRequired()) {
             log.debug("Free day handler processing");
             Random random = new Random();
@@ -28,7 +28,7 @@ public class FeeDayHandler extends Handler {
                 DayOfWeek freeDay = DayOfWeek.values()[random.nextInt(DayOfWeek.values().length)];
                 for (Group group : scheduleParameters.getGroups()) {
                     for (TimeSlot timeSlot : scheduleParameters.getTimeSlots()) {
-                        scheduleParameters.getSchedule().put(ScheduleCell.builder().dayOfWeek(freeDay).timeSlot(timeSlot).build(),
+                        scheduleParameters.getScheduleTable().put(ScheduleCell.builder().dayOfWeek(freeDay).timeSlot(timeSlot).build(),
                                 group, freeClass);
                     }
                 }

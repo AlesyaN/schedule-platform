@@ -2,10 +2,9 @@ package ru.itis.scheduleplatform.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
-import ru.itis.scheduleplatform.enums.ClassType;
+import org.springframework.data.annotation.Transient;
 
 import javax.persistence.*;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -22,6 +21,7 @@ public class Teacher {
     private String patronymic;
 
 
+    @Transient
     @JsonIgnore
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "teacher", cascade = CascadeType.ALL)
     @MapKeyJoinColumn(name = "subject_id")

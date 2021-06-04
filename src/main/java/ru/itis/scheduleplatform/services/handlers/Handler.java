@@ -10,7 +10,7 @@ public abstract class Handler {
 
     protected Handler next;
 
-    public abstract Schedule handleRequest(GeneratorParameters generatorParameters, List<ScheduleParameters> scheduleParameters);
+    public abstract List<Schedule> handleRequest(GeneratorParameters generatorParameters, List<ScheduleParameters> scheduleParameters);
 
     public void setNext(Handler next) {
         this.next = next;

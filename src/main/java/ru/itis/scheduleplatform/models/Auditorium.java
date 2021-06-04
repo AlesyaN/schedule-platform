@@ -2,11 +2,11 @@ package ru.itis.scheduleplatform.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import org.springframework.data.annotation.Transient;
 import ru.itis.scheduleplatform.enums.ClassType;
 
 import javax.persistence.*;
 import java.util.List;
-import java.util.Objects;
 
 @Entity
 @Data
@@ -18,9 +18,12 @@ public class Auditorium {
     private Long id;
 
     @ManyToOne
+    @Transient
     private Building building;
 
     private String roomNumber;
+
+    @Transient
     private Integer capacity;
 
     @JsonIgnore
@@ -28,6 +31,7 @@ public class Auditorium {
     @JoinTable(name = "auditorium_types", joinColumns = @JoinColumn(name = "auditorium_id"))
     @Column(name = "type", nullable = false)
     @Enumerated(EnumType.STRING)
+    @Transient
     private List<ClassType> allowedClassTypes;
 
 
