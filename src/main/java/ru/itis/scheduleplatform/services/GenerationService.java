@@ -1,10 +1,12 @@
 package ru.itis.scheduleplatform.services;
 
 import com.google.common.collect.HashBasedTable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.itis.scheduleplatform.dto.GeneratorParameters;
 import ru.itis.scheduleplatform.dto.ScheduleParameters;
+import ru.itis.scheduleplatform.dto.ScheduleMongoPOJO;
 import ru.itis.scheduleplatform.dto.ScheduleResponse;
 import ru.itis.scheduleplatform.io.XlsxWriter;
 import ru.itis.scheduleplatform.models.genetic.Schedule;
@@ -16,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Slf4j
 public class GenerationService {
 
     private Handler shiftsHandler;
@@ -55,6 +58,7 @@ public class GenerationService {
         for (Schedule s : schedule) {
             scheduleResponseList.add(ScheduleResponse.fromSchedule(s));
         }
+        log.debug("Returned the response");
         return scheduleResponseList;
     }
 
