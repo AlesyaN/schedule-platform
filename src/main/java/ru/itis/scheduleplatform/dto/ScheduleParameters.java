@@ -19,6 +19,7 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 public class ScheduleParameters {
+    private String name;
     private List<Group> groups;
     private List<TimeSlot> timeSlots;
     @Transient

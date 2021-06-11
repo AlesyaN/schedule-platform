@@ -1,9 +1,7 @@
 package ru.itis.scheduleplatform.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.val;
+import lombok.*;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import ru.itis.scheduleplatform.models.Class;
@@ -17,9 +15,14 @@ import java.util.UUID;
 
 @Builder
 @Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class ScheduleResponse {
     @Id
     @Field("_id")
+    private ObjectId objectId;
+
     private String id;
 
     private String name;
@@ -29,13 +32,18 @@ public class ScheduleResponse {
     private ScheduleParameters scheduleParameters;
 
     public static ScheduleResponse fromSchedule(Schedule schedule) {
-        return ScheduleResponse.builder()
+        ScheduleResponse response =  ScheduleResponse.builder()
                 .fitness(schedule.getFitness())
                 .schedule(mapSchedule(schedule))
-                .name(schedule.getName())
+                .name(schedule.getScheduleParameters().getName())
                 .populationId(schedule.getPopulationId())
                 .scheduleParameters(schedule.getScheduleParameters())
                 .build();
+        if (schedule.getId() != null) {
+            response.setObjectId(new ObjectId(schedule.getId()));
+            response.setId(schedule.getId());
+        }
+        return response;
     }
 
     private static List<ScheduleItem> mapSchedule(Schedule schedule) {

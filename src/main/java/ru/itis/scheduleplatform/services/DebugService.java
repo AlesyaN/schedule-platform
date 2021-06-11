@@ -48,6 +48,7 @@ public class DebugService {
 
     public List<ScheduleResponse> initGeneration(GeneratorParameters parameters) {
         ScheduleParameters scheduleParameters = ScheduleParameters.builder()
+                .name(parameters.getName())
                 .scheduleTable(HashBasedTable.create())
                 .groups(groupRepository.findAll())
                 .timeSlots(timeSlotRepository.findAll())

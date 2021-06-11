@@ -1,7 +1,10 @@
 package ru.itis.scheduleplatform.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Transient;
 import ru.itis.scheduleplatform.enums.ClassType;
 
@@ -10,6 +13,9 @@ import java.util.List;
 
 @Entity
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "auditorium")
 public class Auditorium {
 

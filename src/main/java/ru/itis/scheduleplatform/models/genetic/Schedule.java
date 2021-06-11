@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Schedule {
+    private String id;
     private UUID populationId;
     private Table<ScheduleCell, Group, Class> schedule;
     private Integer fitness;
@@ -126,6 +127,7 @@ public class Schedule {
                 .fitness(scheduleResponse.getFitness())
                 .name(scheduleResponse.getName())
                 .populationId(scheduleResponse.getPopulationId())
+                .id(scheduleResponse.getObjectId().toString())
                 .scheduleParameters(scheduleResponse.getScheduleParameters())
                 .build();
     }

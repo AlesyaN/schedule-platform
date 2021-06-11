@@ -48,7 +48,8 @@ public class GeneticGenerator implements Generator {
         for (int i = 0; i < POPULATION_COUNT; i++) {
             Table<ScheduleCell, Group, Class> scheduleTable = randomScheduleGenerator.generate(scheduleParameters);
             Schedule s = new Schedule(scheduleTable, populationId, scheduleParameters);
-            scheduleMongoRepository.save(ScheduleResponse.fromSchedule(s));
+            ScheduleResponse scheduleResponse = scheduleMongoRepository.save(ScheduleResponse.fromSchedule(s));
+            s.setId(scheduleResponse.getObjectId().toString());
             population.add(s);
         }
 
@@ -60,7 +61,10 @@ public class GeneticGenerator implements Generator {
         List<Schedule> population = Schedule.convert(scheduleResponseList);
         this.scheduleParameters = population.get(0).getScheduleParameters();
         population = createNewPopulation(population);
-        population.forEach(s -> scheduleMongoRepository.save(ScheduleResponse.fromSchedule(s)));
+        population.forEach(s -> {
+            ScheduleResponse scheduleResponse = scheduleMongoRepository.save(ScheduleResponse.fromSchedule(s));
+            s.setId(scheduleResponse.getObjectId().toString());
+        });
 
         return getBestSchedule(population);
     }

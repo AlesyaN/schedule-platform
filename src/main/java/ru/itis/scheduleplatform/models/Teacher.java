@@ -1,7 +1,9 @@
 package ru.itis.scheduleplatform.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Transient;
 
 import javax.persistence.*;
@@ -10,6 +12,7 @@ import java.util.Objects;
 
 @Data
 @Entity
+@NoArgsConstructor
 public class Teacher {
 
     @Id

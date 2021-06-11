@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.itis.scheduleplatform.dto.GeneratorParameters;
 import ru.itis.scheduleplatform.dto.ScheduleParameters;
-import ru.itis.scheduleplatform.dto.ScheduleMongoPOJO;
 import ru.itis.scheduleplatform.dto.ScheduleResponse;
 import ru.itis.scheduleplatform.io.XlsxWriter;
 import ru.itis.scheduleplatform.models.genetic.Schedule;
@@ -46,6 +45,7 @@ public class GenerationService {
 
     public List<ScheduleResponse> process(GeneratorParameters parameters) {
         ScheduleParameters scheduleParameters = ScheduleParameters.builder()
+                .name(parameters.getName())
                 .scheduleTable(HashBasedTable.create())
                 .groups(groupRepository.findAll())
                 .timeSlots(timeSlotRepository.findAll())
