@@ -26,6 +26,9 @@ public class ScheduleParameters {
     private Table<ScheduleCell, Group, Class> scheduleTable;
     private List<DayOfWeek> lectureDays;
 
+    private Approach approach;
+    private InputDataSize inputDataSize;
+
     @Transient
     private Map<Group, Auditorium> groupAuditoriumMap;
 

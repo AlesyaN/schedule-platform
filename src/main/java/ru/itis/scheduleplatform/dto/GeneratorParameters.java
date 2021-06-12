@@ -4,12 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import ru.itis.scheduleplatform.models.Auditorium;
 import ru.itis.scheduleplatform.models.Group;
-import ru.itis.scheduleplatform.models.Teacher;
 
 import java.util.List;
-import java.util.Map;
 
 @Data
 public class GeneratorParameters {

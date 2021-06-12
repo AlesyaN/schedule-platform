@@ -4,6 +4,7 @@ import com.google.common.collect.HashBasedTable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.itis.scheduleplatform.dto.Approach;
 import ru.itis.scheduleplatform.dto.GeneratorParameters;
 import ru.itis.scheduleplatform.dto.ScheduleParameters;
 import ru.itis.scheduleplatform.dto.ScheduleResponse;
@@ -49,6 +50,7 @@ public class GenerationService {
                 .scheduleTable(HashBasedTable.create())
                 .groups(groupRepository.findAll())
                 .timeSlots(timeSlotRepository.findAll())
+                .approach(Approach.from(parameters))
                 .build();
         List<ScheduleParameters> scheduleParametersList = new ArrayList<>(List.of(scheduleParameters));
 

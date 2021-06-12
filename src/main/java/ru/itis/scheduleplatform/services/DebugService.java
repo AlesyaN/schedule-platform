@@ -3,9 +3,7 @@ package ru.itis.scheduleplatform.services;
 import com.google.common.collect.HashBasedTable;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.itis.scheduleplatform.dto.GeneratorParameters;
-import ru.itis.scheduleplatform.dto.ScheduleParameters;
-import ru.itis.scheduleplatform.dto.ScheduleResponse;
+import ru.itis.scheduleplatform.dto.*;
 import ru.itis.scheduleplatform.generator.GeneticGenerator;
 import ru.itis.scheduleplatform.io.XlsxWriter;
 import ru.itis.scheduleplatform.models.genetic.Schedule;
@@ -52,6 +50,11 @@ public class DebugService {
                 .scheduleTable(HashBasedTable.create())
                 .groups(groupRepository.findAll())
                 .timeSlots(timeSlotRepository.findAll())
+                .approach(Approach.from(parameters))
+                .inputDataSize(InputDataSize.builder()
+                        .auditoriums(parameters.getInputData().getAuditoriums().size())
+                        .groups(parameters.getInputData().getGroups().size())
+                        .teachers(parameters.getInputData().getTeachers().size()).build())
                 .build();
         List<ScheduleParameters> scheduleParametersList = new ArrayList<>(List.of(scheduleParameters));
 
